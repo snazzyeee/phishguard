@@ -21,10 +21,11 @@ For a dashboard deployment, put this folder in a Git repository and import that 
 ## Explore
 
 - The workbench starts with the two sample emails from page 8 already queued.
-- **Receive email** accepts a sender, subject, and body. Presets fill the form for quick testing.
-- **Assess next**, **Peek next**, **Display pending**, **Assess all**, and **Session summary** mirror the C menu operations.
+- **Live Simulator** opens with the ring visualization and active assessment. Switch between **Ring / Array** and **GUI View / CLI View** as needed; the CLI view mirrors the C menu output.
+- **Receive Email** opens a compact composer for sender, subject, and body. Its five presets fill the form; the visible Phishing, Safe, and Suspicious chips enqueue samples in one click.
+- **Assess next**, **Peek next**, **Pending list**, **Assess all**, and **Session summary** mirror the C menu operations. Pending emails and the session summary open on demand.
 - **Wrap-around demo** creates a queue with `front = 8`, `rear = 1`, and pending emails in slots `8, 9, 0, 1`. It rebuilds the session using queue operations.
 - **Reset session** restores `front = 0`, `rear = -1`, `count = 0`, `nextId = 1`, and clears the session counts.
-- The **Architecture** tab explains the queue and complexity; the **C source** tab shows the complete program extracted from pages 5–7.
+- **Theory & Architecture** explains modulo arithmetic, the exact scoring rubric, complexity, advantages, and future scope. **C Source Code** shows the complete program extracted from pages 5–7.
 
 The simulator follows the C program's substring keyword matching, insecure-link and sender penalties, score cap, and verdict thresholds. The input fields accept the requested 50, 100, and 200 characters; the original C arrays reserve one byte in each field for the null terminator.

@@ -62,6 +62,7 @@ function render() {
   $('#count-value').textContent = queue.count;
   $('#empty-value').textContent = String(queue.isEmpty());
   $('#full-value').textContent = String(queue.isFull());
+  $('.status-strip').classList.toggle('has-items', !queue.isEmpty());
   $('#ring-center-count').innerHTML = `${String(queue.count).padStart(2, '0')}<span>/10</span>`;
   $('#pending-label').textContent = `${String(queue.count).padStart(2, '0')} / 10`;
   renderSlots();
@@ -95,7 +96,7 @@ function renderSlots() {
     cell.type = 'button';
     cell.className = `memory-slot ${classes}`;
     cell.setAttribute('aria-label', slot.getAttribute('aria-label'));
-    cell.innerHTML = `<span class="index">[${i}] ${front ? 'F' : ''}${rear ? 'R' : ''}</span><span class="value">${email ? `#${email.id}` : '—'}</span>`;
+    cell.innerHTML = `<span class="index">[${i}] ${front ? 'F' : ''}${rear ? 'R' : ''}</span><span class="value">${email ? `#${email.id}` : '—'}</span><span class="memory-subject">${email ? escapeHtml(email.subject || '(No subject)') : 'Available'}</span>`;
     cell.addEventListener('click', () => email ? inspect(email, i) : showToast(`Slot ${i} is empty.`, 'success'));
     memory.append(cell);
   }
@@ -105,7 +106,7 @@ function renderPending() {
   const list = $('#pending-list');
   list.replaceChildren();
   if (queue.isEmpty()) {
-    list.innerHTML = '<div class="empty-state"><div class="empty-glyph">∅</div><strong>Inbox queue is empty</strong><p>Use the receive form to add an email to the rear.</p></div>';
+    list.innerHTML = '<div class="empty-state"><div class="empty-glyph">∅</div><strong>Inbox queue is empty</strong><p>Use Receive Email to add a message to the rear.</p></div>';
     return;
   }
   queue.pending().forEach(({ index, email }, order) => {
@@ -113,7 +114,10 @@ function renderPending() {
     row.type = 'button';
     row.className = 'pending-row';
     row.innerHTML = `<span class="pending-order">${String(order + 1).padStart(2, '0')}</span><span class="pending-main"><strong>${escapeHtml(email.subject || '(No subject)')}</strong><span>#${email.id} · ${escapeHtml(email.sender)}</span></span><span class="pending-location">[${index}]</span>`;
-    row.addEventListener('click', () => inspect(email, index));
+    row.addEventListener('click', () => {
+      $('#pending-dialog').close();
+      inspect(email, index);
+    });
     list.append(row);
   });
 }
@@ -157,7 +161,7 @@ function assessOne() {
   latestReport = queue.assessNext();
   command(2, printReport(latestReport));
   render();
-  $('#report-title').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  if (!$('#gui-view').hidden) $('#report-title').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 function peekNext() {
@@ -176,13 +180,14 @@ function displayPending() {
   if (queue.isEmpty()) output += 'Queue is empty.\n';
   else queue.pending().forEach(({ email }, index) => { output += `${index + 1}. #${String(email.id).padEnd(3)} ${email.sender.padEnd(25)} ${email.subject}\n`; });
   command(4, output);
-  $('#pending-panel').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  $('#pending-dialog').showModal();
 }
 
 function setBusy(value) {
   busy = value;
-  ['#assess-next', '#peek-next', '#display-pending', '#assess-all', '#show-summary', '#receive-form button[type="submit"]'].forEach((selector) => { $(selector).disabled = value; });
-  $('#assess-all').querySelector('span:nth-child(2)').firstChild.textContent = value ? 'Assessing…' : 'Assess all';
+  ['#open-compose', '#assess-next', '#peek-next', '#display-pending', '#assess-all', '#show-summary', '#receive-form button[type="submit"]'].forEach((selector) => { $(selector).disabled = value; });
+  document.querySelectorAll('.quick-chip').forEach((button) => { button.disabled = value; });
+  $('#assess-all').querySelector('span:first-child').textContent = value ? 'Assessing…' : 'Assess all';
 }
 
 async function assessAll() {
@@ -210,10 +215,11 @@ async function assessAll() {
 
 function showSummary() {
   command(6, `\n===== SESSION SUMMARY =====\nSafe       : ${queue.safeCount}\nSuspicious : ${queue.suspiciousCount}\nPhishing   : ${queue.phishingCount}\nPending    : ${queue.count}\n`);
-  $('.terminal-panel').classList.remove('collapsed');
-  $('#toggle-terminal').textContent = 'Hide';
-  $('#toggle-terminal').setAttribute('aria-expanded', 'true');
-  $('#terminal-output').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  $('#summary-safe').textContent = queue.safeCount;
+  $('#summary-suspicious').textContent = queue.suspiciousCount;
+  $('#summary-phishing').textContent = queue.phishingCount;
+  $('#summary-pending').textContent = queue.count;
+  $('#summary-dialog').showModal();
 }
 
 function resetSession() {
@@ -279,6 +285,21 @@ async function copyText(value, label) {
   }
 }
 
+function setView(buttonSelector, buttons, panels) {
+  buttons.forEach((selector, index) => {
+    const active = selector === buttonSelector;
+    $(selector).classList.toggle('active', active);
+    $(selector).setAttribute('aria-pressed', String(active));
+    $(panels[index]).hidden = !active;
+  });
+}
+
+function closeOnBackdrop(dialog) {
+  dialog.addEventListener('click', (event) => {
+    if (event.target === dialog) dialog.close();
+  });
+}
+
 document.querySelectorAll('.nav-tab').forEach((button) => button.addEventListener('click', () => {
   const id = button.dataset.tab;
   document.querySelectorAll('.nav-tab').forEach((tab) => tab.classList.toggle('active', tab === button));
@@ -302,12 +323,51 @@ SAMPLE_EMAILS.forEach((email, index) => {
   $('#presets').append(button);
 });
 
+[
+  ['Phishing Sample', SAMPLE_EMAILS[0]],
+  ['Safe Sample', SAMPLE_EMAILS[1]],
+  ['Suspicious Sample', SAMPLE_EMAILS[3]],
+].forEach(([label, email]) => {
+  const button = document.createElement('button');
+  button.className = 'quick-chip';
+  button.type = 'button';
+  button.textContent = label;
+  button.setAttribute('aria-label', `Receive ${label.toLowerCase()} into the queue`);
+  button.addEventListener('click', () => { if (!busy) receive(email); });
+  $('#quick-presets').append(button);
+});
+
+$('#gui-mode').addEventListener('click', () => {
+  setView('#gui-mode', ['#gui-mode', '#cli-mode'], ['#gui-view', '#cli-view']);
+  renderSlots();
+});
+$('#cli-mode').addEventListener('click', () => {
+  setView('#cli-mode', ['#gui-mode', '#cli-mode'], ['#gui-view', '#cli-view']);
+  $('#terminal-output').scrollTop = $('#terminal-output').scrollHeight;
+});
+$('#ring-mode').addEventListener('click', () => {
+  setView('#ring-mode', ['#ring-mode', '#array-mode'], ['#ring-view', '#array-view']);
+  renderSlots();
+});
+$('#array-mode').addEventListener('click', () => {
+  setView('#array-mode', ['#ring-mode', '#array-mode'], ['#ring-view', '#array-view']);
+});
+
+$('#open-compose').addEventListener('click', () => { $('#compose-dialog').showModal(); $('#sender').focus(); });
+$('#close-compose').addEventListener('click', () => $('#compose-dialog').close());
+$('#close-pending').addEventListener('click', () => $('#pending-dialog').close());
+$('#close-summary').addEventListener('click', () => $('#summary-dialog').close());
+['#compose-dialog', '#pending-dialog', '#summary-dialog', '#email-dialog'].forEach((selector) => closeOnBackdrop($(selector)));
+
 $('#receive-form').addEventListener('submit', (event) => {
   event.preventDefault();
   if (busy) return;
   $('#form-error').textContent = '';
   const email = { sender: $('#sender').value, subject: $('#subject').value, body: $('#body').value };
-  if (receive(email)) $('#receive-form').reset();
+  if (receive(email)) {
+    $('#receive-form').reset();
+    $('#compose-dialog').close();
+  }
 });
 $('#assess-next').addEventListener('click', assessOne);
 $('#peek-next').addEventListener('click', peekNext);
@@ -317,14 +377,8 @@ $('#show-summary').addEventListener('click', showSummary);
 $('#reset-session').addEventListener('click', resetSession);
 $('#wrap-demo').addEventListener('click', loadWrapDemo);
 $('#close-dialog').addEventListener('click', () => $('#email-dialog').close());
-$('#email-dialog').addEventListener('click', (event) => { if (event.target === $('#email-dialog')) $('#email-dialog').close(); });
 $('#copy-terminal').addEventListener('click', () => copyText(terminal, 'Terminal output'));
 $('#copy-source').addEventListener('click', async () => { await loadSource(); if (sourceText) copyText(sourceText, 'C source'); });
-$('#toggle-terminal').addEventListener('click', () => {
-  const collapsed = $('.terminal-panel').classList.toggle('collapsed');
-  $('#toggle-terminal').textContent = collapsed ? 'Show' : 'Hide';
-  $('#toggle-terminal').setAttribute('aria-expanded', String(!collapsed));
-});
 new ResizeObserver(() => renderSlots()).observe($('.ring-stage'));
 
 $('#terminal-output').textContent = terminal;
