@@ -1,0 +1,8 @@
+*.pdf binary
+*.html text eol=lf
+*.css text eol=lf
+*.js text eol=lf
+*.mjs text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.c text eol=lf

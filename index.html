@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#09090b">
+  <meta name="description" content="PhishGuard: an interactive circular queue and email threat scoring workbench.">
+  <title>PhishGuard — Email Threat Assessment System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script type="module" src="src/app.js"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="site-header">
+      <a class="brand" href="#top" aria-label="PhishGuard home"><span class="brand-mark" aria-hidden="true">P<span>G</span></span><span>PHISH<span class="brand-muted">GUARD</span><small>QUEUE LAB / V1.0</small></span></a>
+      <nav class="top-nav" aria-label="Main navigation">
+        <button class="nav-tab active" data-tab="workbench" type="button">Workbench</button>
+        <button class="nav-tab" data-tab="architecture" type="button">Architecture</button>
+        <button class="nav-tab" data-tab="source" type="button">C source</button>
+      </nav>
+      <div class="header-status"><span class="live-dot"></span> SYSTEM ONLINE</div>
+    </header>
+
+    <main id="top">
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="eyebrow"><span class="eyebrow-rule"></span> DATA STRUCTURES / MINI PROJECT <span class="eyebrow-index">01 — 03</span></div>
+        <div class="hero-row">
+          <div>
+            <h1 id="hero-title">Email threat assessment<span class="title-period">.</span></h1>
+            <p>Watch a fixed-size circular queue process incoming email in FIFO order, then trace every point behind its risk verdict.</p>
+          </div>
+          <div class="hero-aside"><span>ENGINE</span><strong>C LOGIC / CLIENT SIMULATION</strong><span>CAPACITY</span><strong>10 MEMORY SLOTS</strong></div>
+        </div>
+      </section>
+
+      <section class="telemetry" aria-label="Session telemetry">
+        <div class="metric"><span class="metric-label"><i class="metric-dot safe"></i> SAFE</span><strong id="safe-count">0</strong><small>ASSESSED</small></div>
+        <div class="metric"><span class="metric-label"><i class="metric-dot suspicious"></i> SUSPICIOUS</span><strong id="suspicious-count">0</strong><small>ASSESSED</small></div>
+        <div class="metric"><span class="metric-label"><i class="metric-dot phishing"></i> PHISHING</span><strong id="phishing-count">0</strong><small>ASSESSED</small></div>
+        <div class="metric pending-metric"><span class="metric-label"><i class="metric-dot pending"></i> PENDING</span><strong><span id="pending-count">0</span><em>/10</em></strong><small>IN QUEUE</small></div>
+      </section>
+
+      <div id="workbench" class="tab-panel active">
+        <div class="section-heading"><div><span class="section-number">01 / WORKBENCH</span><h2>Circular queue simulator</h2></div><p>Every slot stays in place. Only the pointers move.</p></div>
+        <div class="workbench-grid">
+          <section class="panel queue-panel" aria-labelledby="queue-title">
+            <div class="panel-head"><div><span class="panel-kicker">LIVE MEMORY MAP</span><h3 id="queue-title">Circular queue <span class="muted">/ MAX 10</span></h3></div><span class="panel-indicator"><span class="live-dot"></span> LIVE</span></div>
+            <div class="queue-state" aria-label="Queue state"><div><span>FRONT</span><strong id="front-value">0</strong></div><div><span>REAR</span><strong id="rear-value">-1</strong></div><div><span>COUNT</span><strong id="count-value">0</strong></div><div><span>isEmpty()</span><strong id="empty-value">true</strong></div><div><span>isFull()</span><strong id="full-value">false</strong></div></div>
+            <div class="ring-stage"><div class="ring-track"></div><div id="ring-slots" class="ring-slots" aria-label="Circular ring of ten queue slots"></div><div class="ring-center"><span>FIFO BUFFER</span><strong id="ring-center-count">00<span>/10</span></strong><small>occupied slots</small></div></div>
+            <div class="memory-header"><span>LINEAR MEMORY ARRAY</span><span>queue[0…9]</span></div>
+            <div id="memory-slots" class="memory-slots" aria-label="Linear array of ten queue slots"></div>
+            <div class="queue-legend"><span><i class="legend-line front"></i> Front pointer</span><span><i class="legend-line rear"></i> Rear pointer</span><span><i class="legend-line occupied"></i> Occupied slot</span></div>
+          </section>
+
+          <div class="control-stack">
+            <section class="panel compose-panel" aria-labelledby="compose-title">
+              <div class="panel-head"><div><span class="panel-kicker">OPERATION 01 / ENQUEUE</span><h3 id="compose-title">Receive email</h3></div><span class="mono panel-code">rear = (rear + 1) % 10</span></div>
+              <div class="presets-title">QUICK-LOAD PRESETS <span>Click to fill the form</span></div>
+              <div id="presets" class="presets"></div>
+              <form id="receive-form" novalidate>
+                <label for="sender">SENDER <span>REQUIRED · MAX 50</span></label><input id="sender" name="sender" maxlength="50" autocomplete="off" placeholder="sender@example.com" required>
+                <label for="subject">SUBJECT <span>MAX 100</span></label><input id="subject" name="subject" maxlength="100" autocomplete="off" placeholder="Email subject">
+                <label for="body">MESSAGE BODY <span>MAX 200</span></label><textarea id="body" name="body" maxlength="200" rows="3" placeholder="Enter message text..."></textarea>
+                <div class="form-bottom"><span id="form-error" role="alert"></span><button class="button button-primary" type="submit">Receive email <span aria-hidden="true">↗</span></button></div>
+              </form>
+            </section>
+            <section class="panel operations-panel" aria-labelledby="operations-title">
+              <div class="panel-head"><div><span class="panel-kicker">QUEUE OPERATIONS</span><h3 id="operations-title">Process inbox</h3></div><span class="mono panel-code">FIFO</span></div>
+              <div class="operation-grid"><button id="assess-next" class="button operation primary-operation" type="button"><span class="op-icon">↓</span><span>Assess next<small>Dequeue + score</small></span><span class="op-key">02</span></button><button id="peek-next" class="button operation" type="button"><span class="op-icon">◎</span><span>Peek next<small>Inspect without removal</small></span><span class="op-key">03</span></button><button id="display-pending" class="button operation" type="button"><span class="op-icon">≡</span><span>Display pending<small>FIFO traversal</small></span><span class="op-key">04</span></button><button id="assess-all" class="button operation" type="button"><span class="op-icon">⇊</span><span>Assess all<small>Process entire queue</small></span><span class="op-key">05</span></button></div>
+              <div class="operation-footer"><label class="toggle-label"><input id="instant-mode" type="checkbox"><span class="switch"></span> Instant batch</label><div><button id="wrap-demo" class="text-button" type="button">Wrap-around demo</button><button id="show-summary" class="text-button" type="button">Session summary</button><button id="reset-session" class="text-button danger-text" type="button">Reset session</button></div></div>
+            </section>
+          </div>
+        </div>
+
+        <div class="results-grid">
+          <section class="panel pending-panel" id="pending-panel" aria-labelledby="pending-title"><div class="panel-head"><div><span class="panel-kicker">ARRIVAL ORDER / FIFO</span><h3 id="pending-title">Pending emails</h3></div><span class="mono panel-code" id="pending-label">00 / 10</span></div><div id="pending-list" class="pending-list"></div></section>
+          <section class="panel report-panel" aria-labelledby="report-title"><div class="panel-head"><div><span class="panel-kicker">THREAT INTELLIGENCE</span><h3 id="report-title">Assessment report</h3></div><span class="mono panel-code" id="report-label">NO REPORT</span></div><div id="report-content" class="report-content"></div></section>
+        </div>
+
+        <section class="panel terminal-panel" aria-labelledby="terminal-title"><div class="terminal-toolbar"><div class="terminal-title"><span class="terminal-prompt">&gt;_</span><div><span class="panel-kicker">PROGRAM MIRROR</span><h3 id="terminal-title">C terminal output</h3></div></div><div class="terminal-actions"><span>phishguard.c</span><button id="copy-terminal" class="icon-button" type="button" aria-label="Copy terminal output">Copy output</button><button id="toggle-terminal" class="icon-button" type="button" aria-expanded="true">Hide</button></div></div><pre id="terminal-output" aria-live="polite"></pre></section>
+      </div>
+
+      <div id="architecture" class="tab-panel">
+        <div class="section-heading"><div><span class="section-number">02 / ARCHITECTURE</span><h2>How the system works</h2></div><p>One array. Two pointers. Constant-time queue operations.</p></div>
+        <div class="architecture-grid">
+          <article class="panel architecture-card wide-card"><span class="panel-kicker">THE CORE IDEA</span><h3>Reclaim every slot with modulo arithmetic.</h3><p>A plain array queue leaves freed positions behind as its front moves forward. In this circular queue, both pointers wrap to index 0 after index 9. The array never shifts, and emails remain in arrival order.</p><div class="formula-grid"><div><span>ENQUEUE</span><code>rear = (rear + 1) % MAX</code></div><div><span>DEQUEUE</span><code>front = (front + 1) % MAX</code></div><div><span>CAPACITY</span><code>MAX = 10</code></div></div></article>
+          <article class="panel architecture-card"><span class="panel-kicker">STATE DETECTION</span><h3>Count removes ambiguity.</h3><p>Pointer positions alone cannot reliably distinguish a full ring from an empty one. The explicit <code>count</code> variable resolves both states.</p><div class="state-cases"><span><code>count == 0</code> <strong>EMPTY</strong></span><span><code>count == 10</code> <strong>FULL</strong></span></div></article>
+          <article class="panel architecture-card"><span class="panel-kicker">SCORING PIPELINE</span><h3>Explain every verdict.</h3><p>The subject and body are scanned for 12 keyword substrings. An insecure link adds 15 points; a malformed sender or risky domain adds 20. The final score is capped at 100.</p><div class="threshold-list"><span><i class="metric-dot safe"></i> 0–29 <strong>SAFE</strong></span><span><i class="metric-dot suspicious"></i> 30–59 <strong>SUSPICIOUS</strong></span><span><i class="metric-dot phishing"></i> 60–100 <strong>PHISHING</strong></span></div></article>
+          <article class="panel architecture-card wide-card"><span class="panel-kicker">PERFORMANCE ANALYSIS</span><h3>Time and space complexity</h3><div class="table-wrap"><table><thead><tr><th>Operation</th><th>Average</th><th>Worst case</th><th>Reason</th></tr></thead><tbody><tr><td>Receive email</td><td>O(1)</td><td>O(1)</td><td>Advance rear and write once</td></tr><tr><td>Assess next</td><td>O(L)</td><td>O(L)</td><td>Dequeue, then scan text</td></tr><tr><td>Peek next</td><td>O(1)</td><td>O(1)</td><td>Read the front slot</td></tr><tr><td>Display pending</td><td>O(n)</td><td>O(n)</td><td>Traverse n queued emails</td></tr><tr><td>Assess all</td><td>O(n × L)</td><td>O(n × L)</td><td>Score each pending email</td></tr></tbody></table></div><p class="table-note">n = pending emails (at most 10); L = email text length. Queue storage is fixed at 10 email records.</p></article>
+          <article class="panel architecture-card"><span class="panel-kicker">ADVANTAGES</span><h3>Small, fair, and inspectable.</h3><ul><li>FIFO handling preserves arrival order.</li><li>Freed array slots are reused without shifting.</li><li>Overflow and underflow are explicit.</li><li>Every score can be explained by rules.</li></ul></article>
+          <article class="panel architecture-card"><span class="panel-kicker">FUTURE SCOPE / FROM THE PDF</span><h3>Where it could go next.</h3><ul><li>Load keywords from a file.</li><li>Prioritize urgent threats with a priority queue.</li><li>Save reports and import emails from CSV.</li><li>Detect look-alike sender domains.</li></ul></article>
+        </div>
+      </div>
+
+      <div id="source" class="tab-panel"><div class="section-heading"><div><span class="section-number">03 / SOURCE</span><h2>Original C implementation</h2></div><p>Complete program extracted from pages 5–7 of the project PDF.</p></div><section class="panel source-panel"><div class="source-toolbar"><div><span class="source-file-mark">C</span><div><strong>phishguard.c</strong><span>184 lines · original project source</span></div></div><button id="copy-source" class="button button-outline" type="button">Copy source</button></div><div class="source-scroll"><div id="source-code" class="source-code" aria-label="C source code with line numbers"><span class="source-loading">Loading source…</span></div></div></section></div>
+    </main>
+
+    <footer class="site-footer"><div><span class="panel-kicker">PROJECT CREDITS</span><h2>Built for the study of data structures.</h2><p>B.Tech (AI &amp; Data Science) · Second Year</p></div><div class="credits"><span>Sunkara Venkata Sai Jagadeesh <em>ROLL 39</em></span><span>Sudhanshu Pendalwar <em>ROLL 46</em></span><span>Sameer Pandey <em>ROLL 38</em></span></div><div class="footer-bottom"><span>PHISHGUARD / EMAIL THREAT ASSESSMENT</span><span>CIRCULAR QUEUE · MAX 10</span></div></footer>
+  </div>
+  <dialog id="email-dialog" class="email-dialog" aria-labelledby="dialog-title"><div class="dialog-head"><div><span class="panel-kicker">EMAIL INSPECTION</span><h2 id="dialog-title">Pending email</h2></div><button id="close-dialog" class="dialog-close" type="button" aria-label="Close">×</button></div><div id="dialog-content"></div></dialog>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
