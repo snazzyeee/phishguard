@@ -8,14 +8,40 @@
   <title>PhishGuard — Email Threat Assessment System</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
   <script type="module" src="src/app.js"></script>
 </head>
 <body>
   <div class="app-shell">
     <header class="site-header">
-      <a class="brand" href="#top" aria-label="PhishGuard home"><span class="brand-mark" aria-hidden="true">P<span>G</span></span><span>PHISH<span class="brand-muted">GUARD</span><small>QUEUE LAB / V1.0</small></span></a>
+      <a class="brand" href="#top" aria-label="PhishGuard home" data-verdict="none" data-queue-state="active">
+        <svg class="brand-mascot" viewBox="0 0 116 96" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+          <rect x="8" y="9" width="103" height="82" fill="#09090B"/>
+          <rect x="4" y="4" width="103" height="82" fill="#F4F4F0" stroke="#09090B" stroke-width="2.5"/>
+          <path class="mascot-queue" d="M27 76C14 67 12 47 20 33M19 34l1-9 8 4" fill="none" stroke="#09090B" stroke-width="2.5" stroke-linecap="square" stroke-linejoin="miter"/>
+          <path d="M35 53 17 40l3 17-4 15 21-9Z" fill="#CCFF00" stroke="#09090B" stroke-width="2.5" stroke-linejoin="round"/>
+          <path d="m43 37 5-13 8 9 8-13 7 14" fill="#CCFF00" stroke="#09090B" stroke-width="2.5" stroke-linejoin="round"/>
+          <path class="mascot-body" d="M29 54c4-14 18-23 37-23 15 0 27 7 33 19l-15 9-15 2c-13 11-29 13-40 3Z" fill="#CCFF00" stroke="#09090B" stroke-width="2.5" stroke-linejoin="round"/>
+          <path d="m37 65 7 9 4-9m-4 9 10 4 1-10" fill="#B5E600" stroke="#09090B" stroke-width="2.5" stroke-linejoin="round"/>
+          <path d="M73 58h23l-6 6-4-4-4 5-4-5-5 5Z" fill="#F4F4F0" stroke="#09090B" stroke-width="2" stroke-linejoin="round"/>
+          <g class="mascot-jaw">
+            <path d="M68 64 96 61c1 9-10 17-23 17l-9-8Z" fill="#CCFF00" stroke="#09090B" stroke-width="2.5" stroke-linejoin="round"/>
+            <path d="m76 65 4-5 3 5 4-5 3 5" fill="#F4F4F0" stroke="#09090B" stroke-width="1.5" stroke-linejoin="round"/>
+          </g>
+          <circle cx="62" cy="46" r="11" fill="#F4F4F0" stroke="#09090B" stroke-width="2.5"/>
+          <circle class="mascot-eye-glow" cx="62" cy="46" r="8" fill="none" stroke="var(--mascot-accent)" stroke-width="2.5"/>
+          <circle cx="66" cy="47" r="3.5" fill="#09090B"/>
+          <path d="m52 38 17-4" stroke="#09090B" stroke-width="3" stroke-linecap="square"/>
+          <path d="M73 11h28v17H73Z" fill="#F4F4F0" stroke="#09090B" stroke-width="2.5"/>
+          <path d="m74 12 13 10 13-10" fill="none" stroke="#09090B" stroke-width="2"/>
+          <circle class="mascot-antenna-tip" cx="87" cy="21" r="3.5" fill="#EF4444" stroke="#09090B" stroke-width="1.5"/>
+          <path d="M87 28v22c0 8 12 10 12 1" fill="none" stroke="#EF4444" stroke-width="3" stroke-linecap="round"/>
+          <path d="m97 52 4-3" stroke="#09090B" stroke-width="2.5" stroke-linecap="round"/>
+        </svg>
+        <span class="brand-identity"><span class="brand-wordmark"><span class="brand-phish">PHISH</span><span class="brand-guard">GUARD</span></span><span class="brand-tagline">EMAILS IN. PHISH OUT.</span></span>
+        <span class="brand-badge">FIFO // MOD 10</span>
+      </a>
       <nav class="top-nav" aria-label="Main navigation">
         <button class="nav-tab active" data-tab="workbench" type="button">Live Simulator</button>
         <button class="nav-tab" data-tab="architecture" type="button">Theory &amp; Architecture</button>

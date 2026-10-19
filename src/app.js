@@ -53,6 +53,8 @@ function receive(email, { initial = false } = {}) {
 }
 
 function render() {
+  $('.brand').dataset.verdict = latestReport?.verdict.toLowerCase() || 'none';
+  $('.brand').dataset.queueState = queue.isFull() ? 'full' : queue.isEmpty() ? 'empty' : 'active';
   $('#safe-count').textContent = queue.safeCount;
   $('#suspicious-count').textContent = queue.suspiciousCount;
   $('#phishing-count').textContent = queue.phishingCount;
@@ -307,6 +309,7 @@ document.querySelectorAll('.nav-tab').forEach((button) => button.addEventListene
   if (id === 'source') loadSource();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }));
+$('.brand').addEventListener('click', () => $('[data-tab="workbench"]').click());
 
 SAMPLE_EMAILS.forEach((email, index) => {
   const button = document.createElement('button');

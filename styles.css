@@ -200,3 +200,49 @@
   .queue-switch button{padding:7px 8px}
   .summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
+
+/* Hand-drawn phish mascot: its scanner eye follows the latest verdict. */
+.site-header{height:96px;gap:20px}
+.brand{--mascot-accent:#CCFF00;--queue-flash:#CCFF00;display:flex;align-items:center;gap:10px;font-family:var(--sans);font-size:inherit;letter-spacing:normal}
+.brand[data-verdict="safe"]{--mascot-accent:#10B981}
+.brand[data-verdict="suspicious"]{--mascot-accent:#F59E0B}
+.brand[data-verdict="phishing"]{--mascot-accent:#EF4444}
+.brand[data-queue-state="empty"]{--queue-flash:#A1A1AA}
+.brand[data-queue-state="full"]{--queue-flash:#EF4444}
+.brand:focus-visible{outline:2px solid #CCFF00;outline-offset:5px}
+.brand-mascot{width:79px;height:65px;flex:none;overflow:visible;transform-origin:center;transition:transform .38s cubic-bezier(.34,1.56,.64,1)}
+.mascot-jaw{transform-origin:69px 65px;transition:transform .22s cubic-bezier(.25,1.5,.4,1)}
+.mascot-eye-glow{transition:stroke .2s ease,filter .2s ease}
+.brand:hover .brand-mascot,.brand:focus-visible .brand-mascot{transform:rotate(-4deg) translateY(-1px)}
+.brand:hover .mascot-jaw,.brand:focus-visible .mascot-jaw{animation:fish-chomp .5s cubic-bezier(.25,1.5,.4,1)}
+.brand:hover .mascot-eye-glow,.brand:focus-visible .mascot-eye-glow{filter:drop-shadow(0 0 4px var(--mascot-accent));animation:eye-flash .42s steps(2,end)}
+.brand:hover .mascot-antenna-tip,.brand:focus-visible .mascot-antenna-tip{animation:queue-flash .54s steps(2,end)}
+@keyframes fish-chomp{0%,100%{transform:rotate(0)}40%{transform:rotate(16deg)}72%{transform:rotate(-7deg)}}
+@keyframes eye-flash{50%{stroke:#F4F4F0}}
+@keyframes queue-flash{50%{fill:var(--queue-flash);filter:drop-shadow(0 0 5px var(--queue-flash))}}
+.brand-identity{display:flex;flex-direction:column;gap:2px;white-space:nowrap}
+.brand-wordmark{display:flex;align-items:center;font-family:'Archivo Black','Arial Black',var(--sans);font-size:23px;line-height:1;letter-spacing:-.075em}
+.brand-phish{color:#F4F4F0}
+.brand-guard{color:#CCFF00}
+.brand-tagline{font:600 8px var(--mono);letter-spacing:.055em;color:#9d9da6}
+.brand-badge{display:inline-block;flex:none;transform:rotate(2deg);border:1.5px solid #F4F4F0;background:#111114;box-shadow:2px 2px 0 #CCFF00;padding:7px 8px;color:#F4F4F0;font:700 9px var(--mono);letter-spacing:-.025em;white-space:nowrap;margin-left:3px}
+@media(max-width:1150px){
+  .site-header{height:88px}
+  .header-status{display:none}
+  .brand{display:grid;grid-template-columns:66px max-content;grid-template-rows:auto auto;column-gap:8px;row-gap:4px}
+  .brand-mascot{width:66px;height:56px;grid-row:1/3}
+  .brand-badge{grid-column:2;grid-row:2;justify-self:start;margin-left:0;padding:4px 6px;font-size:8px}
+  .brand-wordmark{font-size:18px}
+}
+@media(max-width:640px){
+  .site-header{height:auto;min-height:0;padding-top:14px}
+  .top-nav{margin-top:10px}
+  .brand{grid-template-columns:62px max-content;column-gap:7px}
+  .brand-mascot{width:62px;height:52px}
+  .brand-wordmark{font-size:18px}
+  .brand-tagline{font-size:7px}
+}
+@media(prefers-reduced-motion:reduce){
+  .brand-mascot,.mascot-jaw,.mascot-eye-glow{transition:none!important}
+  .brand:hover .mascot-jaw,.brand:focus-visible .mascot-jaw,.brand:hover .mascot-eye-glow,.brand:focus-visible .mascot-eye-glow,.brand:hover .mascot-antenna-tip,.brand:focus-visible .mascot-antenna-tip{animation:none!important}
+}

@@ -22,6 +22,7 @@ For a dashboard deployment, put this folder in a Git repository and import that 
 
 - The workbench starts with the two sample emails from page 8 already queued.
 - **Live Simulator** opens with the ring visualization and active assessment. Switch between **Ring / Array** and **GUI View / CLI View** as needed; the CLI view mirrors the C menu output.
+- The header fish's scanner eye reflects the latest SAFE, SUSPICIOUS, or PHISHING verdict; its hover antenna flash reflects whether the queue is empty, active, or full.
 - **Receive Email** opens a compact composer for sender, subject, and body. Its five presets fill the form; the visible Phishing, Safe, and Suspicious chips enqueue samples in one click.
 - **Assess next**, **Peek next**, **Pending list**, **Assess all**, and **Session summary** mirror the C menu operations. Pending emails and the session summary open on demand.
 - **Wrap-around demo** creates a queue with `front = 8`, `rear = 1`, and pending emails in slots `8, 9, 0, 1`. It rebuilds the session using queue operations.
