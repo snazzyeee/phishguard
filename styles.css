@@ -7,7 +7,7 @@
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important}}
 
 /* A clean whiteboard for the three project creators. */
-.credits.whiteboard{display:block;min-width:390px;padding:0 20px;background:#fff;border:1px solid #d5d8d3;color:#141b17}
+.credits.whiteboard{display:block;min-width:390px;padding:0 20px;border:4px solid transparent;background-color:#fff;background-image:linear-gradient(#fff,#fff),linear-gradient(100deg,#6b4229,#a77448 18%,#80502f 38%,#b17e4e 57%,#71452b 78%,#95623c);background-origin:padding-box,border-box;background-clip:padding-box,border-box;box-shadow:inset 0 0 0 1px #dfc39e,0 0 0 1px #49301f;color:#141b17}
 .credits-header{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:15px 0 12px;border-bottom:2px solid #12805b}
 .credits.whiteboard .credits-header span{display:block;color:#147a58;font:600 9px var(--mono);letter-spacing:.08em;white-space:nowrap}
 .credits.whiteboard .credits-header span:last-child{color:#737b75;font-weight:500}
