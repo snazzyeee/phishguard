@@ -4,48 +4,118 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#09090b">
-  <meta name="description" content="PhishGuard circular queue email threat assessment demo.">
-  <title>PhishGuard</title>
+  <meta name="description" content="PhishGuard: an interactive circular queue and email threat scoring workbench.">
+  <title>PhishGuard — Email Threat Assessment System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
   <script type="module" src="src/app.js"></script>
 </head>
 <body>
-  <main>
-    <header>
-      <h1>PhishGuard</h1>
-      <p>Circular queue email threat assessment</p>
-      <p class="queue-count">Pending emails: <strong id="pending-count">0</strong> / 10</p>
+  <div class="app-shell">
+    <header class="site-header">
+      <a class="brand" href="#top" aria-label="PhishGuard home" data-verdict="none" data-queue-state="active">
+        <svg class="brand-mascot" viewBox="0 0 116 96" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+          <rect x="8" y="9" width="103" height="82" fill="#09090B"/>
+          <rect x="4" y="4" width="103" height="82" fill="#F4F4F0" stroke="#09090B" stroke-width="2.5"/>
+          <path class="mascot-queue" d="M27 76C14 67 12 47 20 33M19 34l1-9 8 4" fill="none" stroke="#09090B" stroke-width="2.5" stroke-linecap="square" stroke-linejoin="miter"/>
+          <path d="M35 53 17 40l3 17-4 15 21-9Z" fill="#CCFF00" stroke="#09090B" stroke-width="2.5" stroke-linejoin="round"/>
+          <path d="m43 37 5-13 8 9 8-13 7 14" fill="#CCFF00" stroke="#09090B" stroke-width="2.5" stroke-linejoin="round"/>
+          <path class="mascot-body" d="M29 54c4-14 18-23 37-23 15 0 27 7 33 19l-15 9-15 2c-13 11-29 13-40 3Z" fill="#CCFF00" stroke="#09090B" stroke-width="2.5" stroke-linejoin="round"/>
+          <path d="m37 65 7 9 4-9m-4 9 10 4 1-10" fill="#B5E600" stroke="#09090B" stroke-width="2.5" stroke-linejoin="round"/>
+          <path d="M73 58h23l-6 6-4-4-4 5-4-5-5 5Z" fill="#F4F4F0" stroke="#09090B" stroke-width="2" stroke-linejoin="round"/>
+          <g class="mascot-jaw">
+            <path d="M68 64 96 61c1 9-10 17-23 17l-9-8Z" fill="#CCFF00" stroke="#09090B" stroke-width="2.5" stroke-linejoin="round"/>
+            <path d="m76 65 4-5 3 5 4-5 3 5" fill="#F4F4F0" stroke="#09090B" stroke-width="1.5" stroke-linejoin="round"/>
+          </g>
+          <circle cx="62" cy="46" r="11" fill="#F4F4F0" stroke="#09090B" stroke-width="2.5"/>
+          <circle class="mascot-eye-glow" cx="62" cy="46" r="8" fill="none" stroke="var(--mascot-accent)" stroke-width="2.5"/>
+          <circle cx="66" cy="47" r="3.5" fill="#09090B"/>
+          <path d="m52 38 17-4" stroke="#09090B" stroke-width="3" stroke-linecap="square"/>
+          <path d="M73 11h28v17H73Z" fill="#F4F4F0" stroke="#09090B" stroke-width="2.5"/>
+          <path d="m74 12 13 10 13-10" fill="none" stroke="#09090B" stroke-width="2"/>
+          <circle class="mascot-antenna-tip" cx="87" cy="21" r="3.5" fill="#EF4444" stroke="#09090B" stroke-width="1.5"/>
+          <path d="M87 28v22c0 8 12 10 12 1" fill="none" stroke="#EF4444" stroke-width="3" stroke-linecap="round"/>
+          <path d="m97 52 4-3" stroke="#09090B" stroke-width="2.5" stroke-linecap="round"/>
+        </svg>
+        <span class="brand-identity"><span class="brand-wordmark"><span class="brand-phish">PHISH</span><span class="brand-guard">GUARD</span></span><span class="brand-tagline">EMAILS IN. PHISH OUT.</span></span>
+        <span class="brand-badge">FIFO // MOD 10</span>
+      </a>
+      <nav class="top-nav" aria-label="Main navigation">
+        <button class="nav-tab active" data-tab="workbench" type="button">Live Simulator</button>
+        <button class="nav-tab" data-tab="architecture" type="button">Theory &amp; Architecture</button>
+        <button class="nav-tab" data-tab="source" type="button">C Source Code</button>
+      </nav>
+      <div class="header-status"><span class="live-dot"></span> SYSTEM ONLINE</div>
     </header>
 
-    <form id="receive-form" novalidate>
-      <h2>1. Receive email (enqueue)</h2>
-      <label for="sender">Sender address</label>
-      <input id="sender" name="sender" maxlength="49" autocomplete="off" required>
-      <label for="subject">Subject</label>
-      <input id="subject" name="subject" maxlength="99" autocomplete="off">
-      <label for="body">Message body</label>
-      <textarea id="body" name="body" maxlength="199" rows="4"></textarea>
-      <button class="primary" type="submit">Receive email</button>
-    </form>
+    <main id="top">
+      <div id="workbench" class="tab-panel active">
+        <div class="workspace-heading"><div><span class="section-number">01 / LIVE SIMULATOR</span><h1>Email threat assessment<span class="title-period">.</span></h1><p>Process the inbox in arrival order. Inspect one queue view and one assessment at a time.</p></div><span class="workspace-caption">CIRCULAR QUEUE / MAX 10</span></div>
 
-    <section aria-labelledby="operations-title">
-      <h2 id="operations-title">Other operations</h2>
-      <div id="operations" class="operations">
-        <button type="button" data-choice="2">2. Assess next</button>
-        <button type="button" data-choice="3">3. Peek next</button>
-        <button type="button" data-choice="4">4. Display pending</button>
-        <button type="button" data-choice="5">5. Assess all</button>
-        <button type="button" data-choice="6">6. Session summary</button>
-        <button type="button" data-choice="0">0. Exit</button>
+        <section class="status-strip" aria-label="Queue and session status">
+          <div class="status-group queue-status">
+            <div class="status-item pointer-front"><span>FRONT</span><strong id="front-value">0</strong></div>
+            <div class="status-item pointer-rear"><span>REAR</span><strong id="rear-value">-1</strong></div>
+            <div class="status-item"><span>COUNT</span><strong id="count-value">0</strong></div>
+            <div class="status-item"><span>isEmpty()</span><strong id="empty-value">true</strong></div>
+            <div class="status-item"><span>isFull()</span><strong id="full-value">false</strong></div>
+          </div>
+          <div class="status-group session-status">
+            <div class="status-item"><span>SAFE</span><strong id="safe-count">0</strong></div>
+            <div class="status-item"><span>SUSPICIOUS</span><strong id="suspicious-count">0</strong></div>
+            <div class="status-item"><span>PHISHING</span><strong id="phishing-count">0</strong></div>
+            <div class="status-item"><span>PENDING</span><strong><span id="pending-count">0</span><small>/10</small></strong></div>
+          </div>
+        </section>
+
+        <section class="panel action-bar" aria-labelledby="operations-title">
+          <div class="action-bar-main"><div class="action-bar-label"><span class="panel-kicker">QUEUE OPERATIONS</span><h2 id="operations-title">Process inbox</h2></div><div class="action-buttons">
+            <button id="open-compose" class="button button-primary" type="button">+ Receive Email <span class="button-detail">/ ENQUEUE</span></button>
+            <button id="assess-next" class="button action-button" type="button">Assess next <span>↓</span></button>
+            <button id="peek-next" class="button action-button" type="button">Peek next</button>
+            <button id="display-pending" class="button action-button" type="button">Pending list</button>
+            <button id="assess-all" class="button action-button" type="button"><span>Assess all</span> <span>⇊</span></button>
+          </div></div>
+          <div class="action-bar-bottom"><div class="quick-load"><span>ONE-CLICK PRESETS</span><div id="quick-presets" class="quick-presets"></div></div><details class="utility-menu"><summary>More controls <span aria-hidden="true">⌄</span></summary><div class="utility-actions"><label class="toggle-label"><input id="instant-mode" type="checkbox"><span class="switch"></span> Instant batch</label><button id="wrap-demo" class="text-button" type="button">Wrap-around demo</button><button id="show-summary" class="text-button" type="button">Session summary</button><button id="reset-session" class="text-button danger-text" type="button">Reset session</button></div></details></div>
+        </section>
+
+        <div class="focus-toolbar"><span>WORKSPACE VIEW</span><div class="view-switch" role="group" aria-label="Workspace view"><button id="gui-mode" class="active" type="button" aria-pressed="true">GUI View</button><button id="cli-mode" type="button" aria-pressed="false">CLI View</button></div></div>
+        <div id="gui-view" class="simulator-layout">
+          <section class="panel queue-panel" aria-labelledby="queue-title">
+            <div class="panel-head"><div><span class="panel-kicker">LIVE MEMORY MAP</span><h2 id="queue-title">Circular queue <span class="muted">/ MAX 10</span></h2></div><div class="view-switch queue-switch" role="group" aria-label="Queue visualization"><button id="ring-mode" class="active" type="button" aria-pressed="true">Ring</button><button id="array-mode" type="button" aria-pressed="false">Array</button></div></div>
+            <div id="ring-view" class="queue-view"><div class="ring-stage"><div class="ring-track"></div><div id="ring-slots" class="ring-slots" aria-label="Circular ring of ten queue slots"></div><div class="ring-center"><span>FIFO BUFFER</span><strong id="ring-center-count">00<span>/10</span></strong><small>occupied slots</small></div></div></div>
+            <div id="array-view" class="queue-view" hidden><div class="array-intro"><span>LINEAR MEMORY ARRAY</span><span>queue[0…9]</span></div><div id="memory-slots" class="memory-slots" aria-label="Linear array of ten queue slots"></div><p class="array-note">Positions stay fixed as front and rear wrap through the array.</p></div>
+            <div class="queue-legend"><span><i class="legend-line front"></i> Front pointer</span><span><i class="legend-line rear"></i> Rear pointer</span><span><i class="legend-line occupied"></i> Occupied slot</span></div>
+          </section>
+          <section class="panel report-panel" aria-labelledby="report-title"><div class="panel-head"><div><span class="panel-kicker">ACTIVE ASSESSMENT</span><h2 id="report-title">Threat report</h2></div><span class="mono panel-code" id="report-label">NO REPORT</span></div><div id="report-content" class="report-content"></div></section>
+        </div>
+        <section id="cli-view" class="panel terminal-panel" aria-labelledby="terminal-title" hidden><div class="terminal-toolbar"><div class="terminal-title"><span class="terminal-prompt">&gt;_</span><div><span class="panel-kicker">PROGRAM MIRROR</span><h2 id="terminal-title">C terminal output</h2></div></div><div class="terminal-actions"><span>phishguard.c</span><button id="copy-terminal" class="icon-button" type="button" aria-label="Copy terminal output">Copy output</button></div></div><pre id="terminal-output" aria-live="polite"></pre></section>
       </div>
-    </section>
 
-    <section aria-labelledby="output-title">
-      <h2 id="output-title">Program output</h2>
-      <pre id="output" role="log" aria-live="polite" aria-relevant="additions"></pre>
-    </section>
+      <div id="architecture" class="tab-panel">
+        <div class="section-heading"><div><span class="section-number">02 / THEORY &amp; ARCHITECTURE</span><h2>How the system works</h2></div><p>Queue mechanics, scoring rules, and performance in one place.</p></div>
+        <div class="architecture-grid">
+          <article class="panel architecture-card wide-card"><span class="panel-kicker">THE CORE IDEA</span><h3>Reclaim every slot with modulo arithmetic.</h3><p>A plain array queue leaves freed positions behind as its front moves forward. In this circular queue, both pointers wrap to index 0 after index 9. The array never shifts, and emails remain in arrival order.</p><div class="formula-grid"><div><span>ENQUEUE</span><code>rear = (rear + 1) % MAX</code></div><div><span>DEQUEUE</span><code>front = (front + 1) % MAX</code></div><div><span>CAPACITY</span><code>MAX = 10</code></div></div></article>
+          <article class="panel architecture-card"><span class="panel-kicker">STATE DETECTION</span><h3>Count removes ambiguity.</h3><p>Pointer positions alone cannot reliably distinguish a full ring from an empty one. The explicit <code>count</code> variable resolves both states.</p><div class="state-cases"><span><code>count == 0</code> <strong>EMPTY</strong></span><span><code>count == 10</code> <strong>FULL</strong></span></div></article>
+          <article class="panel architecture-card"><span class="panel-kicker">SCORING PIPELINE</span><h3>Explain every verdict.</h3><p>The subject and body are scanned for 12 keyword substrings. An insecure link adds 15 points; a malformed sender or risky domain adds 20. The final score is capped at 100.</p><div class="threshold-list"><span><i class="metric-dot safe"></i> 0–29 <strong>SAFE</strong></span><span><i class="metric-dot suspicious"></i> 30–59 <strong>SUSPICIOUS</strong></span><span><i class="metric-dot phishing"></i> 60–100 <strong>PHISHING</strong></span></div></article>
+          <article class="panel architecture-card wide-card"><span class="panel-kicker">SCORING RUBRIC</span><h3>Exact threat scoring rules</h3><div class="table-wrap"><table class="rubric-table"><thead><tr><th>Check</th><th>Detection rule</th><th>Points</th></tr></thead><tbody><tr><td>Suspicious keywords</td><td>Substring presence of urgent, verify, password, suspended, click, winner, lottery, otp, bank, login, prize, or confirm in the lowercased subject and body. Each distinct keyword scores once.</td><td>+10 each</td></tr><tr><td>Insecure link</td><td>Subject or body contains <code>http://</code>.</td><td>+15</td></tr><tr><td>Malformed sender</td><td>Sender has no <code>@</code> symbol.</td><td>+20</td></tr><tr><td>Risky domain</td><td>The domain after <code>@</code> ends in <code>.xyz</code>, <code>.top</code>, or <code>.tk</code>. This is checked only when <code>@</code> is present.</td><td>+20</td></tr><tr><td>Score cap</td><td>Final score is limited to 100.</td><td>100 max</td></tr></tbody></table></div></article>
+          <article class="panel architecture-card wide-card"><span class="panel-kicker">PERFORMANCE ANALYSIS</span><h3>Time and space complexity</h3><div class="table-wrap"><table><thead><tr><th>Operation</th><th>Average</th><th>Worst case</th><th>Reason</th></tr></thead><tbody><tr><td>Receive email</td><td>O(1)</td><td>O(1)</td><td>Advance rear and write once</td></tr><tr><td>Assess next</td><td>O(L)</td><td>O(L)</td><td>Dequeue, then scan text</td></tr><tr><td>Peek next</td><td>O(1)</td><td>O(1)</td><td>Read the front slot</td></tr><tr><td>Display pending</td><td>O(n)</td><td>O(n)</td><td>Traverse n queued emails</td></tr><tr><td>Assess all</td><td>O(n × L)</td><td>O(n × L)</td><td>Score each pending email</td></tr></tbody></table></div><p class="table-note">n = pending emails (at most 10); L = email text length. Queue storage is fixed at 10 email records.</p></article>
+          <article class="panel architecture-card"><span class="panel-kicker">ADVANTAGES</span><h3>Small, fair, and inspectable.</h3><ul><li>FIFO handling preserves arrival order.</li><li>Freed array slots are reused without shifting.</li><li>Overflow and underflow are explicit.</li><li>Every score can be explained by rules.</li></ul></article>
+          <article class="panel architecture-card"><span class="panel-kicker">FUTURE SCOPE / FROM THE PDF</span><h3>Where it could go next.</h3><ul><li>Load keywords from a file.</li><li>Prioritize urgent threats with a priority queue.</li><li>Save reports and import emails from CSV.</li><li>Detect look-alike sender domains.</li></ul></article>
+        </div>
+      </div>
 
-    <p class="source-link"><a href="source/phishguard.c">View the C source from the project PDF</a></p>
-  </main>
+      <div id="source" class="tab-panel"><div class="section-heading"><div><span class="section-number">03 / SOURCE</span><h2>Original C implementation</h2></div><p>Complete program extracted from pages 5–7 of the project PDF.</p></div><section class="panel source-panel"><div class="source-toolbar"><div><span class="source-file-mark">C</span><div><strong>phishguard.c</strong><span>184 lines · original project source</span></div></div><button id="copy-source" class="button button-outline" type="button">Copy source</button></div><div class="source-scroll"><div id="source-code" class="source-code" aria-label="C source code with line numbers"><span class="source-loading">Loading source…</span></div></div></section></div>
+    </main>
+
+    <footer class="site-footer"><div><span class="panel-kicker">PROJECT CREDITS</span><h2>Built for the study of data structures.</h2><p>B.Tech (AI &amp; Data Science) · Second Year</p></div><div class="credits whiteboard" aria-label="Project creators"><div class="credits-header"><span>CREATORS / 03</span><span>PHISHGUARD TEAM</span></div><div class="credit-row"><span class="credit-index">01</span><strong>Sunkara Venkata Sai Jagadeesh</strong><em>ROLL 39</em></div><div class="credit-row"><span class="credit-index">02</span><strong>Sudhanshu Pendalwar</strong><em>ROLL 46</em></div><div class="credit-row"><span class="credit-index">03</span><strong>Sameer Pandey</strong><em>ROLL 38</em></div></div><div class="footer-bottom"><span>PHISHGUARD / EMAIL THREAT ASSESSMENT</span><span>CIRCULAR QUEUE · MAX 10</span></div></footer>
+  </div>
+  <dialog id="compose-dialog" class="compose-dialog" aria-labelledby="compose-title"><div class="dialog-head"><div><span class="panel-kicker">OPERATION 01 / ENQUEUE</span><h2 id="compose-title">Receive email</h2></div><button id="close-compose" class="dialog-close" type="button" aria-label="Close">×</button></div><p class="dialog-intro">Add one message to the rear of the queue.</p><div class="presets-title">LOAD AN EXAMPLE <span>Fills the fields below</span></div><div id="presets" class="presets"></div><form id="receive-form" novalidate><label for="sender">SENDER <span>REQUIRED · MAX 50</span></label><input id="sender" name="sender" maxlength="50" autocomplete="off" placeholder="sender@example.com" required><label for="subject">SUBJECT <span>MAX 100</span></label><input id="subject" name="subject" maxlength="100" autocomplete="off" placeholder="Email subject"><label for="body">MESSAGE BODY <span>MAX 200</span></label><textarea id="body" name="body" maxlength="200" rows="4" placeholder="Enter message text..."></textarea><div class="form-bottom"><span id="form-error" role="alert"></span><button class="button button-primary" type="submit">Receive email <span aria-hidden="true">↗</span></button></div></form></dialog>
+  <dialog id="pending-dialog" class="list-dialog" aria-labelledby="pending-title"><div class="dialog-head"><div><span class="panel-kicker">ARRIVAL ORDER / FIFO</span><h2 id="pending-title">Pending emails</h2></div><div class="dialog-head-actions"><span class="mono panel-code" id="pending-label">00 / 10</span><button id="close-pending" class="dialog-close" type="button" aria-label="Close">×</button></div></div><div id="pending-list" class="pending-list"></div></dialog>
+  <dialog id="summary-dialog" class="summary-dialog" aria-labelledby="summary-title"><div class="dialog-head"><div><span class="panel-kicker">OPERATION 06 / SESSION</span><h2 id="summary-title">Session summary</h2></div><button id="close-summary" class="dialog-close" type="button" aria-label="Close">×</button></div><div class="summary-grid"><div><span>SAFE</span><strong id="summary-safe">0</strong></div><div><span>SUSPICIOUS</span><strong id="summary-suspicious">0</strong></div><div><span>PHISHING</span><strong id="summary-phishing">0</strong></div><div><span>PENDING</span><strong id="summary-pending">0</strong></div></div><p class="summary-note">The matching C output is also available in CLI View.</p></dialog>
+  <dialog id="email-dialog" class="email-dialog" aria-labelledby="dialog-title"><div class="dialog-head"><div><span class="panel-kicker">EMAIL INSPECTION</span><h2 id="dialog-title">Pending email</h2></div><button id="close-dialog" class="dialog-close" type="button" aria-label="Close">×</button></div><div id="dialog-content"></div></dialog>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
 </body>
 </html>
