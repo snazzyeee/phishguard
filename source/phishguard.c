@@ -1,183 +1,133 @@
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 #include <ctype.h>
-#define MAX 10        /* capacity of the circular queue */
-#define KEYWORDS 12   /* number of suspicious keywords  */
-struct Email {
-    int  id;
-    char sender[50];
-    char subject[100];
-    char body[200];
-};
-/* ---------- Circular queue (the data structure used) ---------- */
-struct Email queue[MAX];
-int front = 0, rear = -1, count = 0;
-int nextId = 1;
-int safeCount = 0, suspiciousCount = 0, phishingCount = 0;
-const char *keyword[KEYWORDS] = {
+#define MAX 10
+
+typedef struct {
+    int id;
+    char sender[50], subject[100], body[200];
+} Email;
+
+Email q[MAX];
+int front = 0, rear = -1, count = 0, nextId = 1;
+int totals[3] = {0};  /* safe, suspicious, phishing */
+const char *words[] = {
     "urgent", "verify", "password", "suspended", "click", "winner",
     "lottery", "otp", "bank", "login", "prize", "confirm"
 };
-int isEmpty() { return count == 0; }
-int isFull()  { return count == MAX; }
-/* ENQUEUE: add an email at the rear of the queue */
-void enqueue(struct Email e) {
-    rear = (rear + 1) % MAX;       /* wrap around */
-    queue[rear] = e;
-    count++;
+
+void input(const char *prompt, char *s, int size) {
+    printf("%s", prompt);
+    if (!fgets(s, size, stdin)) { s[0] = 0; return; }
+    s[strcspn(s, "\n")] = 0;
 }
-/* DEQUEUE: remove and return the email at the front */
-struct Email dequeue() {
-    struct Email e = queue[front];
-    front = (front + 1) % MAX;     /* wrap around */
-    count--;
-    return e;
+
+void lower(char *s) {
+    for (; *s; s++) *s = (char)tolower((unsigned char)*s);
 }
-/* Read a full line (spaces allowed) */
-void readLine(char s[], int size) {
-    if (fgets(s, size, stdin) == NULL) { s[0] = '\0'; return; }
-    s[strcspn(s, "\n")] = '\0';
+
+void enqueue(Email e) {
+    rear = (rear + 1) % MAX;
+    q[rear] = e; count++;
 }
-void toLowerStr(char dest[], const char src[]) {
-    int i;
-    for (i = 0; src[i] != '\0'; i++)
-        dest[i] = tolower((unsigned char)src[i]);
-    dest[i] = '\0';
+
+Email dequeue(void) {
+    Email e = q[front];
+    front = (front + 1) % MAX;
+    count--; return e;
 }
-int endsWith(const char s[], const char tail[]) {
-    int ls = strlen(s), lt = strlen(tail);
-    return ls >= lt && strcmp(s + ls - lt, tail) == 0;
-}
-/* Threat score (0-100). *hits = number of suspicious keywords found */
-int assess(struct Email *e, int *hits) {
-    char text[320], sender[50];
-    char *at;
-    int score = 0, i;
+
+int scoreEmail(Email e, int *hits) {
+    char text[320], sender[50], *ext;
+    int score = 0;
+    snprintf(text, sizeof(text), "%s %s", e.subject, e.body);
+    strcpy(sender, e.sender);
+    lower(text); lower(sender);
     *hits = 0;
-    snprintf(text, sizeof(text), "%s %s", e->subject, e->body);
-    toLowerStr(text, text);
-    toLowerStr(sender, e->sender);
-    for (i = 0; i < KEYWORDS; i++) {         /* +10 per keyword */
-        if (strstr(text, keyword[i])) {
-            score += 10;
-            (*hits)++;
-        }
+    for (int i = 0; i < 12; i++)
+        if (strstr(text, words[i])) { score += 10; (*hits)++; }
+    if (strstr(text, "http://")) score += 15;
+    if (!strchr(sender, '@')) score += 20;
+    else {
+        ext = strrchr(sender, '.');
+        if (ext && (!strcmp(ext, ".xyz") || !strcmp(ext, ".top") ||
+                    !strcmp(ext, ".tk"))) score += 20;
     }
-    if (strstr(text, "http://"))             /* insecure link */
-        score += 15;
-    at = strchr(sender, '@');
-    if (at == NULL)                          /* malformed sender */
-        score += 20;
-    else if (endsWith(at, ".xyz") || endsWith(at, ".top") || endsWith(at, ".tk"))
-        score += 20;                         /* risky domain */
     return score > 100 ? 100 : score;
 }
-const char *verdict(int score) {
-    if (score >= 60) return "PHISHING";
-    if (score >= 30) return "SUSPICIOUS";
-    return "SAFE";
-}
-void receiveEmail() {
-    struct Email e;
-    if (isFull()) {
-        printf("Inbox queue is full (overflow). Assess some emails first.\n");
-        return;
-    }
-    printf("Enter sender address: ");
-    readLine(e.sender, sizeof(e.sender));
-    printf("Enter subject: ");
-    readLine(e.subject, sizeof(e.subject));
-    printf("Enter message body: ");
-    readLine(e.body, sizeof(e.body));
-    if (strlen(e.sender) == 0) {
-        printf("Sender cannot be empty.\n");
-        return;
-    }
-    e.id = nextId++;
-    enqueue(e);
+
+void receive(void) {
+    Email e = {0};
+    if (count == MAX) { puts("Inbox queue is full (overflow)."); return; }
+    input("Enter sender address: ", e.sender, sizeof(e.sender));
+    input("Enter subject: ", e.subject, sizeof(e.subject));
+    input("Enter message body: ", e.body, sizeof(e.body));
+    if (!e.sender[0]) { puts("Sender cannot be empty."); return; }
+    e.id = nextId++; enqueue(e);
     printf("Email #%d received and queued (position %d).\n", e.id, count);
 }
-void report(struct Email e) {
-    int hits, score = assess(&e, &hits);
-    const char *v = verdict(score);
+
+void report(Email e) {
+    int hits, s = scoreEmail(e, &hits);
+    const char *name = s >= 60 ? "PHISHING" :
+                       s >= 30 ? "SUSPICIOUS" : "SAFE";
+    totals[s >= 60 ? 2 : s >= 30 ? 1 : 0]++;
     printf("\n----- THREAT REPORT : Email #%d -----\n", e.id);
-    printf("From    : %s\n", e.sender);
-    printf("Subject : %s\n", e.subject);
-    printf("Keywords: %d suspicious\n", hits);
-    printf("Score   : %d / 100\n", score);
-    printf("Verdict : %s\n", v);
-    if (score >= 60)      phishingCount++;
-    else if (score >= 30) suspiciousCount++;
-    else                  safeCount++;
+    printf("From    : %s\nSubject : %s\n", e.sender, e.subject);
+    printf("Keywords: %d suspicious\nScore   : %d / 100\n", hits, s);
+    printf("Verdict : %s\n", name);
 }
-/* Assess the email at the FRONT of the queue (first come, first served) */
-void assessNext() {
-    if (isEmpty()) {
-        printf("No emails waiting (queue is empty).\n");
-        return;
-    }
-    report(dequeue());
+
+void assessNext(void) {
+    if (!count) puts("No emails waiting (queue is empty).");
+    else report(dequeue());
 }
-void assessAll() {
-    if (isEmpty()) {
-        printf("No emails waiting (queue is empty).\n");
-        return;
-    }
-    while (!isEmpty())
-        report(dequeue());
+
+void assessAll(void) {
+    if (!count) puts("No emails waiting (queue is empty).");
+    while (count) report(dequeue());
 }
-void peekNext() {
-    if (isEmpty()) {
-        printf("No emails waiting (queue is empty).\n");
-        return;
-    }
+
+void peek(void) {
+    if (!count) { puts("No emails waiting (queue is empty)."); return; }
     printf("Next to assess -> #%d from %s | %s\n",
-           queue[front].id, queue[front].sender, queue[front].subject);
+           q[front].id, q[front].sender, q[front].subject);
 }
-void displayQueue() {
-    int i;
+
+void display(void) {
     printf("\n===== PENDING EMAILS (%d/%d) =====\n", count, MAX);
-    if (isEmpty()) {
-        printf("Queue is empty.\n");
-        return;
-    }
-    for (i = 0; i < count; i++) {
-        struct Email *e = &queue[(front + i) % MAX];
-        printf("%d. #%-3d %-25s %s\n", i + 1, e->id, e->sender, e->subject);
+    if (!count) { puts("Queue is empty."); return; }
+    for (int i = 0; i < count; i++) {
+        Email e = q[(front + i) % MAX];
+        printf("%d. #%-3d %-25s %s\n", i + 1, e.id, e.sender, e.subject);
     }
 }
-void summary() {
+
+void summary(void) {
     printf("\n===== SESSION SUMMARY =====\n");
-    printf("Safe       : %d\n", safeCount);
-    printf("Suspicious : %d\n", suspiciousCount);
-    printf("Phishing   : %d\n", phishingCount);
-    printf("Pending    : %d\n", count);
+    printf("Safe       : %d\nSuspicious : %d\n", totals[0], totals[1]);
+    printf("Phishing   : %d\nPending    : %d\n", totals[2], count);
 }
-int main() {
-    char line[10];
-    int choice;
+
+int main(void) {
+    char line[16]; int choice;
     do {
-        printf("\n===== PHISHGUARD =====\n");
-        printf("1. Receive Email (Enqueue)\n");
-        printf("2. Assess Next Email (Dequeue)\n");
-        printf("3. Peek Next Email\n");
-        printf("4. Display Pending Emails\n");
-        printf("5. Assess All Pending Emails\n");
-        printf("6. Session Summary\n");
-        printf("0. Exit\n");
-        printf("Enter your choice: ");
-        readLine(line, sizeof(line));
+        puts("\n===== PHISHGUARD =====\n1. Receive Email (Enqueue)"
+             "\n2. Assess Next Email (Dequeue)\n3. Peek Next Email"
+             "\n4. Display Pending Emails\n5. Assess All Pending Emails"
+             "\n6. Session Summary\n0. Exit");
+        input("Enter your choice: ", line, sizeof(line));
         choice = atoi(line);
         switch (choice) {
-            case 1: receiveEmail(); break;
-            case 2: assessNext();   break;
-            case 3: peekNext();     break;
-            case 4: displayQueue(); break;
-            case 5: assessAll();    break;
-            case 6: summary();      break;
-            case 0: printf("Exiting PhishGuard.\n"); break;
-            default: printf("Invalid choice.\n");
+            case 1: receive(); break;
+            case 2: assessNext(); break;
+            case 3: peek(); break;
+            case 4: display(); break;
+            case 5: assessAll(); break;
+            case 6: summary(); break;
+            case 0: puts("Exiting PhishGuard."); break;
+            default: puts("Invalid choice.");
         }
     } while (choice != 0);
     return 0;
