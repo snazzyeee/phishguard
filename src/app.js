@@ -13,6 +13,14 @@ let runToken = 0;
 let busy = false;
 let sourceText = null;
 
+function explain(title, description, formula, complexity) {
+  $('#explain-title').textContent = title;
+  $('#explain-description').textContent = description;
+  $('#explain-formula').textContent = formula;
+  $('#explain-complexity').textContent = complexity;
+  $('#explain-state').textContent = `front = ${queue.front} · rear = ${queue.rear} · count = ${queue.count}`;
+}
+
 function appendTerminal(output) {
   terminal += output;
   const pre = $('#terminal-output');
@@ -35,6 +43,7 @@ function showToast(message, tone = 'error') {
 function receive(email, { initial = false } = {}) {
   if (queue.isFull()) {
     command(1, `${overflow}\n`);
+    explain('Overflow: queue is full', `All ${MAX} slots are occupied, so isFull() blocks enqueue before rear moves or an email is overwritten. Assess an email to free a slot.`, `count == MAX == ${MAX}`, 'O(1) check · no state change');
     showToast(overflow);
     return false;
   }
@@ -45,8 +54,10 @@ function receive(email, { initial = false } = {}) {
     showToast('Sender cannot be empty.');
     return false;
   }
+  const oldRear = queue.rear;
   const saved = queue.enqueue({ sender, subject: email.subject, body: email.body });
   command(1, `Enter sender address: ${saved.sender}\nEnter subject: ${saved.subject}\nEnter message body: ${saved.body}\nEmail #${saved.id} received and queued (position ${queue.count}).\n`);
+  explain('Enqueue: add at rear', `Email #${saved.id} entered slot ${queue.rear}. Rear moved from ${oldRear} to ${queue.rear}; count rose to ${queue.count}. The front email still leaves first.`, `rear = (${oldRear} + 1) % ${MAX} = ${queue.rear}`, 'O(1) time · O(1) extra space');
   render();
   if (!initial) showToast(`Email #${saved.id} received at slot ${queue.rear}.`, 'success');
   return true;
@@ -157,11 +168,14 @@ function printReport(report) {
 function assessOne() {
   if (queue.isEmpty()) {
     command(2, `${underflow}\n`);
+    explain('Underflow: queue is empty', 'isEmpty() blocks dequeue before the front slot is read. Receive an email first.', 'count == 0', 'O(1) check · no state change');
     showToast(underflow);
     return;
   }
+  const oldFront = queue.front;
   latestReport = queue.assessNext();
   command(2, printReport(latestReport));
+  explain('Dequeue: assess the front', `Email #${latestReport.email.id} left slot ${oldFront}. Front advanced to ${queue.front}; count fell to ${queue.count}. Its ${latestReport.score}-point score gives a ${latestReport.verdict} verdict.`, `front = (${oldFront} + 1) % ${MAX} = ${queue.front}`, 'O(1) dequeue + O(L) scoring');
   render();
   if (!$('#gui-view').hidden) $('#report-title').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
@@ -169,11 +183,13 @@ function assessOne() {
 function peekNext() {
   if (queue.isEmpty()) {
     command(3, `${underflow}\n`);
+    explain('Peek: nothing to read', 'No email is pending at front. The pointers and count stay unchanged.', 'count == 0', 'O(1) check · no state change');
     showToast(underflow);
     return;
   }
   const email = queue.peek();
   command(3, `Next to assess -> #${email.id} from ${email.sender} | ${email.subject}\n`);
+  explain('Peek: read without removing', `Email #${email.id} is at front slot ${queue.front}. No pointer or count changed; Assess next will process this email.`, `queue[front] = queue[${queue.front}]`, 'O(1) time · O(1) extra space');
   inspect(email, queue.front);
 }
 
@@ -182,6 +198,7 @@ function displayPending() {
   if (queue.isEmpty()) output += 'Queue is empty.\n';
   else queue.pending().forEach(({ email }, index) => { output += `${index + 1}. #${String(email.id).padEnd(3)} ${email.sender.padEnd(25)} ${email.subject}\n`; });
   command(4, output);
+  explain('Display: traverse in FIFO order', `Starting at front ${queue.front}, visit ${queue.count} pending email${queue.count === 1 ? '' : 's'}. Modulo wraps the index when it reaches slot 10. The queue itself does not change.`, `queue[(front + i) % ${MAX}]`, 'O(n) time · O(1) extra space');
   $('#pending-dialog').showModal();
 }
 
@@ -196,10 +213,12 @@ async function assessAll() {
   if (busy) return;
   if (queue.isEmpty()) {
     command(5, `${underflow}\n`);
+    explain('Assess all: queue is empty', 'The loop has no emails to dequeue or score. Receive an email first.', 'while (!isEmpty())', 'O(1) check · no state change');
     showToast(underflow);
     return;
   }
   const token = ++runToken;
+  const startingCount = queue.count;
   setBusy(true);
   appendTerminal('Enter your choice: 5\n');
   const instant = $('#instant-mode').checked || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -210,6 +229,7 @@ async function assessAll() {
     if (!instant && !queue.isEmpty()) await new Promise((resolve) => setTimeout(resolve, 520));
   }
   if (token === runToken) {
+    explain('Assess all: repeat dequeue', `Processed ${startingCount} email${startingCount === 1 ? '' : 's'} in FIFO order. Each was scored after leaving the front, and the queue is now empty.`, 'while (!isEmpty()) report(dequeue())', 'O(n × L) time · O(1) extra space');
     setBusy(false);
     showToast('All pending emails assessed.', 'success');
   }
@@ -221,6 +241,7 @@ function showSummary() {
   $('#summary-suspicious').textContent = queue.suspiciousCount;
   $('#summary-phishing').textContent = queue.phishingCount;
   $('#summary-pending').textContent = queue.count;
+  explain('Summary: read session counters', `The program has assessed ${queue.safeCount + queue.suspiciousCount + queue.phishingCount} emails. ${queue.count} are still pending; reading these counters leaves the queue unchanged.`, 'safeCount + suspiciousCount + phishingCount', 'O(1) time · O(1) extra space');
   $('#summary-dialog').showModal();
 }
 
@@ -233,6 +254,7 @@ function resetSession() {
   $('#terminal-output').textContent = terminal;
   $('#receive-form').reset();
   $('#form-error').textContent = '';
+  explain('Reset: empty the queue', 'All 10 slots are available again. Front returns to 0, rear to -1, and count to 0.', 'front = 0 · rear = -1 · count = 0', 'O(10) time · fixed storage');
   render();
   showToast('Session reset. All ten slots are empty.', 'success');
 }
@@ -249,6 +271,7 @@ function loadWrapDemo() {
   receive(SAMPLE_EMAILS[0], { initial: true });
   receive(SAMPLE_EMAILS[1], { initial: true });
   render();
+  explain('Wrap-around: reuse freed slots', 'After eight dequeues, front is 8. Two new emails move rear from 9 to 0 and then 1. Pending order is slots 8 → 9 → 0 → 1.', 'rear = (rear + 1) % 10', 'O(1) per enqueue or dequeue');
   showToast('Wrap-around ready: front = 8, rear = 1. New mail occupies slots 0 and 1.', 'success');
 }
 
